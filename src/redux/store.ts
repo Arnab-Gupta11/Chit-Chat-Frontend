@@ -1,9 +1,11 @@
-import { configureStore } from '@reduxjs/toolkit';
-import { apiClient } from './apiClient/apiClient';
+import { configureStore } from "@reduxjs/toolkit";
+import { apiClient } from "./apiClient/apiClient";
+import authReducer from "./features/auth/authSlice";
 
 export const store = configureStore({
   reducer: {
     [apiClient.reducerPath]: apiClient.reducer,
+    auth: authReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(apiClient.middleware),
