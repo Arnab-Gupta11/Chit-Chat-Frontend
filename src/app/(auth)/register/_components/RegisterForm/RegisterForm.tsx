@@ -1,11 +1,16 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+
+// Redux & API ইমপোর্ট
+import { useRegisterMutation } from "@/redux/features/auth/auth.api";
+import { useAppDispatch } from "@/redux/hooks";
+import { setCredentials } from "@/redux/features/auth/authSlice";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -43,8 +48,11 @@ const registerSchema = z
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export function RegisterForm() {
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const dispatch = useAppDispatch();
+
+  // RTK Query Register Mutation
+  const [register, { isLoading }] = useRegisterMutation();
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -57,13 +65,54 @@ export function RegisterForm() {
   });
 
   const onSubmit = async (values: RegisterFormValues) => {
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      console.log(values);
-      setIsLoading(false);
+    try {
+      const { name, email, password } = values;
+
+      const response = await register({ name, email, password }).unwrap();
+
+      dispatch(
+        setCredentials({
+          user: response.data.user,
+        }),
+      );
+
+      toast.success("Account created successfully!");
       router.push("/");
-    }, 1000);
+    } catch (error: any) {
+      console.log("Registration Error:", error);
+
+      let displayMessage =
+        error?.data?.message || "Failed to create account. Please try again.";
+      const fieldErrors = error?.data?.errors;
+
+      // Check if backend sent specific field errors
+      if (Array.isArray(fieldErrors) && fieldErrors.length > 0) {
+        // If there is a specific field error, use the first one as our main display message
+        // instead of the generic "Validation failed"
+        displayMessage = fieldErrors[0].message;
+
+        fieldErrors.forEach((err: any) => {
+          if (err.field) {
+            form.setError(
+              err.field as any,
+              {
+                type: "server",
+                message: err.message,
+              },
+              { shouldFocus: true },
+            ); // shouldFocus forces a re-render so it shows up!
+          }
+        });
+      }
+
+      // Always set the root error with the most descriptive message we have!
+      form.setError("root", {
+        type: "server",
+        message: displayMessage,
+      });
+
+      toast.error(displayMessage);
+    }
   };
 
   return (
@@ -131,6 +180,12 @@ export function RegisterForm() {
                 </FormItem>
               )}
             />
+
+            {form.formState.errors.root && (
+              <p className="text-[0.8rem] font-medium text-destructive text-center">
+                {form.formState.errors.root.message}
+              </p>
+            )}
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <Button type="submit" className="w-full" disabled={isLoading}>

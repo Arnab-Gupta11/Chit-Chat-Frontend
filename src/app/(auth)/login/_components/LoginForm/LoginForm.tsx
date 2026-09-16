@@ -1,11 +1,16 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+
+// Redux & API ইমপোর্ট
+import { useLoginMutation } from "@/redux/features/auth/auth.api";
+import { useAppDispatch } from "@/redux/hooks";
+import { setCredentials } from "@/redux/features/auth/authSlice";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -34,8 +39,11 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const dispatch = useAppDispatch();
+
+  // RTK Query Mutation (isLoading নিজে থেকেই হ্যান্ডেল করবে)
+  const [login, { isLoading }] = useLoginMutation();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -46,13 +54,50 @@ export function LoginForm() {
   });
 
   const onSubmit = async (values: LoginFormValues) => {
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      console.log(values);
-      setIsLoading(false);
+    try {
+      const response = await login(values).unwrap();
+      dispatch(
+        setCredentials({
+          user: response.data.user,
+        }),
+      );
+
+      toast.success("Successfully logged in!");
+
       router.push("/");
-    }, 1000);
+    } catch (error: any) {
+      console.log("Login Error:", error);
+
+      let displayMessage =
+        error?.data?.message || "Failed to login. Please try again.";
+      const fieldErrors = error?.data?.errors;
+
+      // Check if backend sent specific field errors
+      if (Array.isArray(fieldErrors) && fieldErrors.length > 0) {
+        displayMessage = fieldErrors[0].message;
+
+        fieldErrors.forEach((err: any) => {
+          if (err.field) {
+            form.setError(
+              err.field as any,
+              {
+                type: "server",
+                message: err.message,
+              },
+              { shouldFocus: true },
+            );
+          }
+        });
+      }
+
+      // Always set the root error with the most descriptive message we have!
+      form.setError("root", {
+        type: "server",
+        message: displayMessage,
+      });
+
+      toast.error(displayMessage);
+    }
   };
 
   return (
@@ -100,7 +145,14 @@ export function LoginForm() {
                 </FormItem>
               )}
             />
+
+            {form.formState.errors.root && (
+              <p className="text-[0.8rem] font-medium text-destructive text-center">
+                {form.formState.errors.root.message}
+              </p>
+            )}
           </CardContent>
+
           <CardFooter className="flex flex-col space-y-4">
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Logging in..." : "Login"}
