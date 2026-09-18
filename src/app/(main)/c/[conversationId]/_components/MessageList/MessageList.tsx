@@ -3,15 +3,15 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageBubble } from "../MessageBubble/MessageBubble";
 import { useEffect, useRef } from "react";
 
-const MESSAGES = [
-  { id: "1", content: "Hey! How are you?", senderId: "other", timestamp: "10:00 AM" },
-  { id: "2", content: "I am good, thanks! How about you?", senderId: "me", timestamp: "10:05 AM", status: "read" },
-  { id: "3", content: "I am doing well. Are we still on for the meeting today?", senderId: "other", timestamp: "10:06 AM" },
-  { id: "4", content: "Yes! See you at 2 PM.", senderId: "me", timestamp: "10:10 AM", status: "delivered" },
-];
+interface IMessageListProps{
+  conversationId:string
+}
 
-export function MessageList() {
+export function MessageList({conversationId}:IMessageListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  //Get Current User
+  
   
   useEffect(() => {
     if (scrollRef.current) {
