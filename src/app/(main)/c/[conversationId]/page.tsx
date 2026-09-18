@@ -8,10 +8,10 @@ export default async function ChatPage({ params }: { params: Promise<{ conversat
     <div className="flex flex-col h-full bg-background relative">
       <ChatHeader />
       <div className="flex-1 overflow-hidden flex flex-col relative">
-        <MessageList />
+        <MessageList conversationId={conversationId}/>
       </div>
       <div className="p-4 bg-background border-t mt-auto relative z-10">
-        <MessageComposer />
+        <MessageComposer conversationId={conversationId}/>
       </div>
     </div>
   );
