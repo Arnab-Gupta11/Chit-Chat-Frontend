@@ -12,13 +12,16 @@ export const userApi = apiClient.injectEndpoints({
           dispatch(
             setCredentials({
               user: data.data, // ব্যাকএন্ড থেকে আসা ডেটা
-            })
+            }),
           );
         } catch (error) {
           // ফেইল করলে ইন্টারসেপ্টর বাকিটা সামলাবে
-          console.log("Error from fetching user info: ",error);
+          console.log("Error from fetching user info: ", error);
         }
       },
+    }),
+    searchUsers: builder.query<{ data: { users: any[] } }, string>({
+      query: (searchTerm) => `/users/search?q=${searchTerm}`,
     }),
   }),
 });
