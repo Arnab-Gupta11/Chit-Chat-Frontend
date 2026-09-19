@@ -26,4 +26,4 @@ export const userApi = apiClient.injectEndpoints({
   }),
 });
 
-export const { useGetMeQuery } = userApi;
+export const { useGetMeQuery  , useSearchUsersQuery} = userApi;

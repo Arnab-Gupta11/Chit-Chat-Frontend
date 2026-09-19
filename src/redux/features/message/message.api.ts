@@ -9,7 +9,7 @@ import { text } from "stream/consumers";
 export const messageApi = apiClient.injectEndpoints({
   endpoints: (builder) => ({
     // ==========================================
-    // 📥 GET MESSAGES (হিস্টোরি ফেচ + সকেট লিসেন) 
+    // 📥 GET MESSAGES (হিস্টোরি ফেচ + সকেট লিসেন)
     // ==========================================
     getMessages: builder.query<
       { data: { messages: IMessage[] }; meta?: any },
@@ -18,25 +18,29 @@ export const messageApi = apiClient.injectEndpoints({
       // API কল করে ডাটাবেস থেকে পুরনো মেসেজগুলো নিয়ে আসা
       query: (conversationId) => `/conversations/${conversationId}/messages`,
 
+      // 🪄 FIX 3: মেসেজ অর্ডারিং ঠিক করা
+      transformResponse: (response: any) => {
+        if (response?.data?.messages) {
+          response.data.messages.reverse();
+        }
+        return response;
+      },
+
       // 🪄 রিয়েল-টাইম সকেট ইন্টিগ্রেশন
-      // WHY: ইউজার যেন পেজ রিলোড না করেই নতুন মেসেজ দেখতে পায়, তাই API কল শেষ হওয়ার পরপরই আমরা সকেট লিসেনার অন করে দিচ্ছি।
       async onCacheEntryAdded(
         conversationId,
         { updateCachedData, cacheDataLoaded, cacheEntryRemoved },
       ) {
         try {
-          // আগে নিশ্চিত হচ্ছি যে ডাটাবেস থেকে পুরনো ডেটা লোড হয়েছে
           await cacheDataLoaded;
-
           const socket = await getSocket("/");
 
+          // 🪄 FIX 1 & 2: ব্যাকএন্ডকে বলছি আমাকে এই চ্যাটরুমে জয়েন করাও!
+          socket.emit("join_conversation", { conversationId });
+
           const messageListener = (newMessage: IMessage) => {
-            // মেসেজটি কি এই চ্যাটেরই? অন্য চ্যাটের হলে ইগনোর করো।
             if (newMessage.conversation === conversationId) {
               updateCachedData((draft) => {
-                // 🛑 Duplicate Prevention (ডুপ্লিকেট চেক)
-                // WHY: Optimistic Update এর কারণে মেসেজটি আগে থেকেই ক্যাশে থাকতে পারে।
-                // তাই সকেট থেকে মেসেজ এলে আমরা চেক করছি যে এটি আগে থেকেই আছে কি না।
                 const alreadyExists = draft.data.messages.some(
                   (m) => m._id === newMessage._id,
                 );
@@ -48,12 +52,11 @@ export const messageApi = apiClient.injectEndpoints({
             }
           };
 
-          // ব্যাকএন্ড থেকে 'new_message' ইভেন্ট এলে লিসেনারটি ফায়ার হবে
           socket.on("new_message", messageListener);
 
-          // 🧹 Memory Clean-up
-          // WHY: ইউজার অন্য পেজে গেলে এই ক্যাশ রিমুভ হয়ে যাবে। তখন সকেট লিসেনার বন্ধ না করলে মেমোরি লিক হবে এবং ব্যাকগ্রাউন্ডে মেসেজ আসতে থাকবে।
           await cacheEntryRemoved;
+          // 🧹 Memory Clean-up
+          socket.emit("leave_conversation", { conversationId });
           socket.off("new_message", messageListener);
           console.log(
             `🧹 Cleaned up socket listener for conversation: ${conversationId}`,
