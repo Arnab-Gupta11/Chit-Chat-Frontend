@@ -118,6 +118,8 @@ export function Sidebar() {
               ? chat.participants.find((p) => p.user._id !== user?._id)?.user
               : null;
 
+            const isOnline = otherUser?.isOnline;
+
             // চ্যাটের নাম কী দেখাব? গ্রুপ হলে গ্রুপের নাম, আর ডিরেক্ট চ্যাট হলে অপর ইউজারের নাম
             const chatName = isGroup ? chat.name : otherUser?.name;
             const chatInitials = chatName
@@ -137,9 +139,15 @@ export function Sidebar() {
                         <Users className="w-5 h-5" />
                       </div>
                     ) : (
-                      <Avatar>
-                        <AvatarFallback>{chatInitials}</AvatarFallback>
-                      </Avatar>
+                      <div className="relative">
+                        <Avatar>
+                          <AvatarFallback>{chatInitials}</AvatarFallback>
+                        </Avatar>
+                        {/* 👇 রিয়েল-টাইম গ্রিন/গ্রে ডট */}
+                        <span
+                          className={`absolute bottom-0 right-0 w-3 h-3 border-2 border-background rounded-full ${isOnline ? "bg-green-500" : "bg-gray-400"}`}
+                        ></span>
+                      </div>
                     )}
                   </div>
                   <div className="flex-1 overflow-hidden">
