@@ -1,5 +1,7 @@
 import { getSocket } from "@/lib/socket";
 import { apiClient } from "@/redux/apiClient/apiClient";
+import { attachSidebarMessageListener } from "@/redux/socket-listeners/conversation.listeners";
+import { attachPrescenceListenters } from "@/redux/socket-listeners/online-presence.listeners";
 import { IConversation } from "@/types/conversation.types";
 
 export const conversationApi = apiClient.injectEndpoints({
@@ -25,29 +27,20 @@ export const conversationApi = apiClient.injectEndpoints({
             socket.emit("join_conversation", { conversationId: conv._id });
           });
 
-          // ২. যেকোনো চ্যাটরুমে নতুন মেসেজ এলে সাইডবার আপডেট করো
-          const globalMessageListener = (newMessage: any) => {
-            updateCachedData((draft) => {
-              const convIndex = draft.data.conversations.findIndex(
-                (c) => c._id === newMessage.conversation,
-              );
-
-              if (convIndex !== -1) {
-                // চ্যাটটি সাইডবারে থাকলে তার lastMessage আপডেট করে তাকে একদম উপরে (0 index) নিয়ে আসো
-                const [updatedConv] = draft.data.conversations.splice(
-                  convIndex,
-                  1,
-                );
-                updatedConv.lastMessage = newMessage;
-                draft.data.conversations.unshift(updatedConv);
-              }
-            });
-          };
-
-          socket.on("new_message", globalMessageListener);
+          // ২. এক্সট্রাক্ট করা লিসেনার কল করছি
+          const cleanupMessageListener = attachSidebarMessageListener(
+            socket,
+            updateCachedData,
+          );
+          const cleanupPresenceListener = attachPrescenceListenters(
+            socket,
+            updateCachedData,
+          );
 
           await cacheEntryRemoved;
-          socket.off("new_message", globalMessageListener);
+          // ক্লিনআপ
+          cleanupMessageListener();
+          cleanupPresenceListener();
         } catch (error) {
           console.error("Sidebar socket error:", error);
         }

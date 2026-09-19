@@ -1,5 +1,6 @@
 import { apiClient } from "@/redux/apiClient/apiClient";
 import { getSocket } from "@/lib/socket";
+import { attachActiveChatMessageListener } from "@/redux/socket-listeners/message.listeners";
 // যেহেতু তুমি টাইপগুলো আলাদা ফাইলে নিয়ে গেছ, তাই সেখান থেকে ইমপোর্ট করছি
 import { IMessage } from "@/types/message.types";
 import { RootState } from "@/redux/store"; // Redux স্টোর থেকে কারেন্ট ইউজার নেওয়ার জন্য
@@ -38,26 +39,18 @@ export const messageApi = apiClient.injectEndpoints({
           // 🪄 FIX 1 & 2: ব্যাকএন্ডকে বলছি আমাকে এই চ্যাটরুমে জয়েন করাও!
           socket.emit("join_conversation", { conversationId });
 
-          const messageListener = (newMessage: IMessage) => {
-            if (newMessage.conversation === conversationId) {
-              updateCachedData((draft) => {
-                const alreadyExists = draft.data.messages.some(
-                  (m) => m._id === newMessage._id,
-                );
-
-                if (!alreadyExists) {
-                  draft.data.messages.push(newMessage);
-                }
-              });
-            }
-          };
-
-          socket.on("new_message", messageListener);
+          // এক্সট্রাক্ট করা লিসেনার কল করছি
+          const cleanupMessageListener = attachActiveChatMessageListener(
+            socket,
+            conversationId,
+            updateCachedData,
+          );
 
           await cacheEntryRemoved;
           // 🧹 Memory Clean-up
           socket.emit("leave_conversation", { conversationId });
-          socket.off("new_message", messageListener);
+          cleanupMessageListener();
+
           console.log(
             `🧹 Cleaned up socket listener for conversation: ${conversationId}`,
           );
