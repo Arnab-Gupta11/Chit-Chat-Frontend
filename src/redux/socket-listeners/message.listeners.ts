@@ -66,9 +66,12 @@ export const attachActiveChatMessageListener = (
     });
   };
 
-  
   // Edit Update Listener
-  const editListener = (data: { messageId: string; newText: string; editedAt: string }) => {
+  const editListener = (data: {
+    messageId: string;
+    newText: string;
+    editedAt: string;
+  }) => {
     updateCachedData((draft) => {
       const msg = draft.data.messages.find((m) => m._id === data.messageId);
       if (msg) {
@@ -79,15 +82,29 @@ export const attachActiveChatMessageListener = (
     });
   };
 
+  // Delete Update Listener
+  const deleteListener = (data: { messageId: string; deletedAt: string }) => {
+    updateCachedData((draft) => {
+      const msg = draft.data.messages.find((m) => m._id === data.messageId);
+      if (msg) {
+        msg.content = "This message was deleted";
+        msg.isDeleted = true; // ফ্ল্যাগটি true করে দিলাম
+        msg.deletedAt = data.deletedAt;
+      }
+    });
+  };
+
   socket.on(SocketEvent.NEW_MESSAGE, messageListener);
   socket.on(SocketEvent.DELIVERY_UPDATE, deliveryListener);
   socket.on(SocketEvent.READ_UPDATE, readListener);
   socket.on(SocketEvent.MESSAGE_EDITED, editListener);
+  socket.on(SocketEvent.MESSAGE_DELETED, deleteListener);
 
   return () => {
     socket.off(SocketEvent.NEW_MESSAGE, messageListener);
     socket.off(SocketEvent.DELIVERY_UPDATE, deliveryListener);
     socket.off(SocketEvent.READ_UPDATE, readListener);
     socket.off(SocketEvent.MESSAGE_EDITED, editListener);
+    socket.off(SocketEvent.MESSAGE_DELETED, deleteListener);
   };
 };

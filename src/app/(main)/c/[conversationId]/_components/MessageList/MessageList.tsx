@@ -69,12 +69,19 @@ export function MessageList({ conversationId }: IMessageListProps) {
   }, [messages, currentUser, conversationId]);
 
   //Scroll down if new message come.
+  const prevMessageCount = useRef(messages.length);
+  // Scroll down ONLY if a NEW message comes
   useEffect(() => {
     if (scrollRef.current) {
       const scrollElement = scrollRef.current;
-      if (scrollElement) {
+
+      // শুধুমাত্র যদি নতুন মেসেজ অ্যাড হয় (বর্তমান সংখ্যা > আগের সংখ্যা), তবেই নিচে স্ক্রল করো
+      if (messages.length > prevMessageCount.current) {
         scrollElement.scrollTop = scrollElement.scrollHeight;
       }
+
+      // বর্তমান সংখ্যাটি সেভ করে রাখো ভবিষ্যতের চেকের জন্য
+      prevMessageCount.current = messages.length;
     }
   }, [messages]);
 
