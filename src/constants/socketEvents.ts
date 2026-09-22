@@ -16,4 +16,11 @@ export enum SocketEvent {
   DELETE_MESSAGE = "delete_message",
   TOGGLE_REACTION = "toggle_reaction",
   SYNC_MESSAGE = "sync_message",
+  DELIVERY_UPDATE = "delivery_update",
+  READ_UPDATE = "read_update",
+  MESSAGE_EDITED = "message_edited",
+  MESSAGE_DELETED = "message_deleted",
+  REACTION_UPDATED = "reaction_updated",
+  SYNC_MESSAGES = "sync_messages",
+  SERVER_ERROR = "server_error"
 }

@@ -9,6 +9,7 @@ export const attachActiveChatMessageListener = (
     updater: (draft: { data: { messages: IMessage[] } }) => void,
   ) => void,
 ) => {
+  //New Message Listener
   const messageListener = (newMessage: IMessage) => {
     if (newMessage.conversation === conversationId) {
       updateCachedData((draft) => {
@@ -20,12 +21,58 @@ export const attachActiveChatMessageListener = (
           draft.data.messages.push(newMessage);
         }
       });
+
+      // 🪄 ১. মেসেজ স্ক্রিনে আসলে এবং ব্রাউজার ট্যাবে ভিজিবল থাকলে Read সিগন্যাল দাও!
+      if (document.visibilityState === "visible") {
+        socket.emit(SocketEvent.MESSAGE_READ, {
+          messageId: newMessage._id,
+          conversationId: newMessage.conversation,
+        });
+      } else {
+        // 🪄 চ্যাট ওপেন আছে, কিন্তু ব্রাউজার মিনিমাইজ করা বা অন্য ট্যাবে আছে (Delivered সিগন্যাল দাও)
+        socket.emit(SocketEvent.MESSAGE_DELIVERED, {
+          messageId: newMessage._id,
+          conversationId: newMessage.conversation,
+        });
+      }
+    } else {
+      // 🪄 ২. অন্য চ্যাটের মেসেজ ব্যাকগ্রাউন্ডে এলে শুধু Delivered সিগন্যাল দাও
+      socket.emit(SocketEvent.MESSAGE_DELIVERED, {
+        messageId: newMessage._id,
+        conversationId: newMessage.conversation,
+      });
     }
   };
 
+  //Delivery Update Listener
+  const deliveryListener = (data: {
+    messageId: string;
+    deliveredAt: string;
+  }) => {
+    updateCachedData((draft) => {
+      const msg = draft.data.messages.find((m) => m._id === data.messageId);
+      if (msg) {
+        msg.deliveredTo.push({ user: "any", deliveredAt: data.deliveredAt });
+      }
+    });
+  };
+  // Read Update Listener
+  const readListener = (data: { messageId: string; readAt: string }) => {
+    updateCachedData((draft) => {
+      const msg = draft.data.messages.find((m) => m._id === data.messageId);
+      if (msg) {
+        msg.readBy.push({ user: "any", readAt: data.readAt });
+      }
+    });
+  };
+
   socket.on(SocketEvent.NEW_MESSAGE, messageListener);
+  socket.on(SocketEvent.DELIVERY_UPDATE, deliveryListener);
+  socket.on(SocketEvent.READ_UPDATE, readListener);
 
   return () => {
     socket.off(SocketEvent.NEW_MESSAGE, messageListener);
+    socket.off(SocketEvent.DELIVERY_UPDATE, deliveryListener);
+    socket.off(SocketEvent.READ_UPDATE, readListener);
   };
 };

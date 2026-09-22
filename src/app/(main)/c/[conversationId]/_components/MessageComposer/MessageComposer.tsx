@@ -1,5 +1,5 @@
-import { SocketEvent } from "@/constants/socketEvents";
 "use client";
+import { SocketEvent } from "@/constants/socketEvents";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

@@ -21,6 +21,12 @@ export const attachSidebarMessageListener = (
         draft.data.conversations.unshift(updatedConv);
       }
     });
+
+    // 🪄 গ্লোবাল লিসেনার থেকেও ডেলিভারি সিগন্যাল দিতে হবে! (যাতে অন্য চ্যাটে থাকলেও ডেলিভারি টিক হয়)
+    socket.emit(SocketEvent.MESSAGE_DELIVERED, {
+      messageId: newMessage._id,
+      conversationId: newMessage.conversation,
+    });
   };
 
   socket.on(SocketEvent.NEW_MESSAGE, globalMessageListener);
