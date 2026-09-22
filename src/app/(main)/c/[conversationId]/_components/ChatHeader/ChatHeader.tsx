@@ -1,7 +1,11 @@
 "use client";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { getSocket } from "@/lib/socket";
 import { useGetConversationsQuery } from "@/redux/features/conversation/conversation.api";
 import { useAppSelector } from "@/redux/hooks";
+import { attachTypingListener } from "@/redux/socket-listeners/typing.listeners";
+import { useEffect, useState } from "react";
+import { Socket } from "socket.io-client";
 
 interface ChatHeaderProps {
   conversationId: string;
@@ -15,6 +19,24 @@ export function ChatHeader({ conversationId }: ChatHeaderProps) {
   const conversation = data?.data?.conversations.find(
     (c) => c._id === conversationId,
   );
+
+  // Typing Listener
+  const [typingUser, setTypingUser] = useState<string | null>(null);
+  useEffect(() => {
+    let cleanup: (() => void) | undefined;
+
+    getSocket("/").then((socket) => {
+      cleanup = attachTypingListener(
+        socket,
+        conversationId,
+        currentUser?._id,
+        setTypingUser,
+      );
+    });
+    return () => {
+      if (cleanup) cleanup();
+    };
+  }, [conversationId, currentUser?._id]);
 
   if (!conversation)
     return <div className="p-4 border-b h-18.25 bg-card">Loading...</div>;
@@ -52,9 +74,15 @@ export function ChatHeader({ conversationId }: ChatHeaderProps) {
           <h2 className="font-semibold leading-none">{chatName}</h2>
           {!isGroup && (
             <span
-              className={`text-xs ${isOnline ? "text-green-500 font-medium" : "text-muted-foreground"}`}
+              className={`text-xs ${
+                typingUser
+                  ? "text-primary font-medium italic animate-pulse"
+                  : isOnline
+                    ? "text-green-500 font-medium"
+                    : "text-muted-foreground"
+              }`}
             >
-              {statusText}
+              {typingUser ? "typing..." : statusText}
             </span>
           )}
         </div>
