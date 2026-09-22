@@ -7,6 +7,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { useAppDispatch } from "@/redux/hooks";
+import { setEditingMessage } from "@/redux/features/chatUi/chatUiSlice";
 
 interface MessageBubbleProps {
   message: { id: string; content: string; timestamp: string; status?: string };
@@ -14,6 +16,7 @@ interface MessageBubbleProps {
 }
 
 export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
+  const dispatch = useAppDispatch();
   return (
     <div
       className={`flex flex-col group ${isOwn ? "items-end" : "items-start"}`}
@@ -42,7 +45,7 @@ export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
 
           {/* Quick actions on hover */}
           <div
-            className={`absolute top-0 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex bg-background border shadow-sm rounded-md ${isOwn ? "left-0 -translate-x-full -ml-2" : "right-0 translate-x-full ml-2"}`}
+            className={`absolute top-0 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex bg-background text-foreground border shadow-sm rounded-md ${isOwn ? "left-0 -translate-x-full -ml-2" : "right-0 translate-x-full ml-2"}`}
           >
             <Button variant="ghost" size="icon" className="h-6 w-6">
               <Smile className="w-3 h-3" />
@@ -63,6 +66,20 @@ export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
               <DropdownMenuContent>
                 <DropdownMenuItem>Copy</DropdownMenuItem>
                 <DropdownMenuItem>Reply</DropdownMenuItem>
+                {isOwn && (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      dispatch(
+                        setEditingMessage({
+                          id: message.id,
+                          content: message.content,
+                        }),
+                      )
+                    }
+                  >
+                    Edit
+                  </DropdownMenuItem>
+                )}
                 {isOwn && (
                   <DropdownMenuItem className="text-destructive">
                     Delete
