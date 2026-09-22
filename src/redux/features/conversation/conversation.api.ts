@@ -1,3 +1,4 @@
+import { SocketEvent } from "@/constants/socketEvents";
 import { getSocket } from "@/lib/socket";
 import { apiClient } from "@/redux/apiClient/apiClient";
 import { attachSidebarMessageListener } from "@/redux/socket-listeners/conversation.listeners";
@@ -24,7 +25,7 @@ export const conversationApi = apiClient.injectEndpoints({
 
           // ১. সাইডবার লোড হলে ইউজারের সবগুলো চ্যাটরুমে তাকে জয়েন করিয়ে দাও
           data.data.conversations.forEach((conv) => {
-            socket.emit("join_conversation", { conversationId: conv._id });
+            socket.emit(SocketEvent.JOIN_CONVERSATION, { conversationId: conv._id });
           });
 
           // ২. এক্সট্রাক্ট করা লিসেনার কল করছি
@@ -81,7 +82,7 @@ export const conversationApi = apiClient.injectEndpoints({
           );
 
           // সদ্য তৈরি হওয়া চ্যাটরুমে গ্লোবালি জয়েন করে নেওয়া (যাতে সাইডবার আপডেট মিস না হয়)
-          socket.emit("join_conversation", { conversationId: data.data._id });
+          socket.emit(SocketEvent.JOIN_CONVERSATION, { conversationId: data.data._id });
         } catch (error) {
           console.error(error);
         }

@@ -1,3 +1,4 @@
+import { SocketEvent } from "@/constants/socketEvents";
 import { Socket } from "socket.io-client";
 import { IConversation } from "@/types/conversation.types";
 
@@ -22,9 +23,9 @@ export const attachSidebarMessageListener = (
     });
   };
 
-  socket.on("new_message", globalMessageListener);
+  socket.on(SocketEvent.NEW_MESSAGE, globalMessageListener);
 
   return () => {
-    socket.off("new_message", globalMessageListener);
+    socket.off(SocketEvent.NEW_MESSAGE, globalMessageListener);
   };
 };

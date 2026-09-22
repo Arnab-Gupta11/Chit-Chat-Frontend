@@ -1,3 +1,4 @@
+import { SocketEvent } from "@/constants/socketEvents";
 import { IConversation } from "@/types/conversation.types";
 import { Socket } from "socket.io-client";
 
@@ -42,10 +43,10 @@ export const attachPrescenceListenters = (
     });
   };
 
-  socket.on("user_online", onlineListener);
-  socket.on("user_offline", offlineListener);
+  socket.on(SocketEvent.USER_ONLINE, onlineListener);
+  socket.on(SocketEvent.USER_OFFLINE, offlineListener);
   return () => {
-    socket.off("user_online", onlineListener);
-    socket.off("user_offline", offlineListener);
+    socket.off(SocketEvent.USER_ONLINE, onlineListener);
+    socket.off(SocketEvent.USER_OFFLINE, offlineListener);
   };
 };

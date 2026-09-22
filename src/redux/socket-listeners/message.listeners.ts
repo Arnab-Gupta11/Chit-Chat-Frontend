@@ -1,3 +1,4 @@
+import { SocketEvent } from "@/constants/socketEvents";
 import { Socket } from "socket.io-client";
 import { IMessage } from "@/types/message.types";
 
@@ -22,9 +23,9 @@ export const attachActiveChatMessageListener = (
     }
   };
 
-  socket.on("new_message", messageListener);
+  socket.on(SocketEvent.NEW_MESSAGE, messageListener);
 
   return () => {
-    socket.off("new_message", messageListener);
+    socket.off(SocketEvent.NEW_MESSAGE, messageListener);
   };
 };

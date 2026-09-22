@@ -1,3 +1,4 @@
+import { SocketEvent } from "@/constants/socketEvents";
 import { Socket } from "socket.io-client";
 
 export const attachTypingListener = (
@@ -25,10 +26,10 @@ export const attachTypingListener = (
     }
   };
 
-  socket.on("typing", handleTyping);
+  socket.on(SocketEvent.TYPING, handleTyping);
 
   // Clean-up function
   return () => {
-    socket.off("typing", handleTyping);
+    socket.off(SocketEvent.TYPING, handleTyping);
   };
 };

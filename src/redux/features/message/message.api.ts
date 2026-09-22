@@ -1,3 +1,4 @@
+import { SocketEvent } from "@/constants/socketEvents";
 import { apiClient } from "@/redux/apiClient/apiClient";
 import { getSocket } from "@/lib/socket";
 import { attachActiveChatMessageListener } from "@/redux/socket-listeners/message.listeners";
@@ -37,7 +38,7 @@ export const messageApi = apiClient.injectEndpoints({
           const socket = await getSocket("/");
 
           // 🪄 FIX 1 & 2: ব্যাকএন্ডকে বলছি আমাকে এই চ্যাটরুমে জয়েন করাও!
-          socket.emit("join_conversation", { conversationId });
+          socket.emit(SocketEvent.JOIN_CONVERSATION, { conversationId });
 
           // এক্সট্রাক্ট করা লিসেনার কল করছি
           const cleanupMessageListener = attachActiveChatMessageListener(
@@ -48,7 +49,7 @@ export const messageApi = apiClient.injectEndpoints({
 
           await cacheEntryRemoved;
           // 🧹 Memory Clean-up
-          socket.emit("leave_conversation", { conversationId });
+          socket.emit(SocketEvent.LEAVE_CONVERSATION, { conversationId });
           cleanupMessageListener();
 
           console.log(
@@ -75,7 +76,7 @@ export const messageApi = apiClient.injectEndpoints({
           return new Promise((resolve) => {
             // ব্যাকএন্ড 'text' ফিল্ডটি এক্সপেক্ট করে, তাই content কে text হিসেবে পাঠাচ্ছি
             socket.emit(
-              "send_message",
+              SocketEvent.SEND_MESSAGE,
               { conversationId, text: content },
               (response: any) => {
                 if (response.status === "success") {

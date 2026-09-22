@@ -1,3 +1,4 @@
+import { SocketEvent } from "@/constants/socketEvents";
 "use client";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ export function MessageComposer({ conversationId }: IMessageComposerProps) {
     e.preventDefault();
     if (!message.trim()) return;
     getSocket("/").then((socket) =>
-      socket.emit("typing_stop", { conversationId }),
+      socket.emit(SocketEvent.TYPING_STOP, { conversationId }),
     );
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     // মিউটেশন কল করছি
@@ -39,12 +40,12 @@ export function MessageComposer({ conversationId }: IMessageComposerProps) {
 
     //Emit socket event
     const socket = await getSocket("/");
-    socket.emit("typing_start", { conversationId });
+    socket.emit(SocketEvent.TYPING_START, { conversationId });
     // আগের টাইমার ক্লিয়ার করে নতুন ২ সেকেন্ডের টাইমার সেট করা
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
     typingTimeoutRef.current = setTimeout(() => {
-      socket.emit("typing_stop", { conversationId });
+      socket.emit(SocketEvent.TYPING_STOP, { conversationId });
     }, 2000);
   };
 
