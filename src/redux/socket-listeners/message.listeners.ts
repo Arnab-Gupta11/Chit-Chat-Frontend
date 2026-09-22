@@ -66,13 +66,28 @@ export const attachActiveChatMessageListener = (
     });
   };
 
+  
+  // Edit Update Listener
+  const editListener = (data: { messageId: string; newText: string; editedAt: string }) => {
+    updateCachedData((draft) => {
+      const msg = draft.data.messages.find((m) => m._id === data.messageId);
+      if (msg) {
+        msg.content = data.newText;
+        msg.isEdited = true;
+        msg.editedAt = data.editedAt;
+      }
+    });
+  };
+
   socket.on(SocketEvent.NEW_MESSAGE, messageListener);
   socket.on(SocketEvent.DELIVERY_UPDATE, deliveryListener);
   socket.on(SocketEvent.READ_UPDATE, readListener);
+  socket.on(SocketEvent.MESSAGE_EDITED, editListener);
 
   return () => {
     socket.off(SocketEvent.NEW_MESSAGE, messageListener);
     socket.off(SocketEvent.DELIVERY_UPDATE, deliveryListener);
     socket.off(SocketEvent.READ_UPDATE, readListener);
+    socket.off(SocketEvent.MESSAGE_EDITED, editListener);
   };
 };

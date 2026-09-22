@@ -128,6 +128,7 @@ export function MessageList({ conversationId }: IMessageListProps) {
                 minute: "2-digit",
               }),
               status: currentStatus,
+              isEdited: msg.isEdited,
             }}
             isOwn={isOwn}
           />

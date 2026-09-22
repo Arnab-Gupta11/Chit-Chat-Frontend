@@ -11,7 +11,7 @@ import { useAppDispatch } from "@/redux/hooks";
 import { setEditingMessage } from "@/redux/features/chatUi/chatUiSlice";
 
 interface MessageBubbleProps {
-  message: { id: string; content: string; timestamp: string; status?: string };
+  message: { id: string; content: string; timestamp: string; status?: string; isEdited?: boolean };
   isOwn: boolean;
 }
 
@@ -31,6 +31,7 @@ export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
           <div
             className={`flex items-center gap-1 mt-1 text-[10px] ${isOwn ? "text-primary-foreground/70 justify-end" : "text-muted-foreground"}`}
           >
+            {message.isEdited && <span className="mr-1 italic opacity-75">(edited)</span>}
             <span>{message.timestamp}</span>
             {isOwn && message.status === "sent" && (
               <Check className="w-3 h-3" />
