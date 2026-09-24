@@ -94,11 +94,21 @@ export const attachActiveChatMessageListener = (
     });
   };
 
+  const reactionListener = (data: { messageId: string; reactions: any[] }) => {
+    updateCachedData((draft) => {
+      const msg = draft.data.messages.find((m) => m._id === data.messageId);
+      if (msg) {
+        msg.reactions = data.reactions;
+      }
+    });
+  };
+
   socket.on(SocketEvent.NEW_MESSAGE, messageListener);
   socket.on(SocketEvent.DELIVERY_UPDATE, deliveryListener);
   socket.on(SocketEvent.READ_UPDATE, readListener);
   socket.on(SocketEvent.MESSAGE_EDITED, editListener);
   socket.on(SocketEvent.MESSAGE_DELETED, deleteListener);
+  socket.on(SocketEvent.REACTION_UPDATED, reactionListener);
 
   return () => {
     socket.off(SocketEvent.NEW_MESSAGE, messageListener);
@@ -106,5 +116,6 @@ export const attachActiveChatMessageListener = (
     socket.off(SocketEvent.READ_UPDATE, readListener);
     socket.off(SocketEvent.MESSAGE_EDITED, editListener);
     socket.off(SocketEvent.MESSAGE_DELETED, deleteListener);
+    socket.off(SocketEvent.REACTION_UPDATED, reactionListener);
   };
 };

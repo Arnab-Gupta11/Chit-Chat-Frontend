@@ -136,7 +136,8 @@ export function MessageList({ conversationId }: IMessageListProps) {
               }),
               status: currentStatus,
               isEdited: msg.isEdited,
-              isDeleted:msg.isDeleted
+              isDeleted:msg.isDeleted,
+              reactions: msg.reactions || []
             }}
             isOwn={isOwn}
           />
