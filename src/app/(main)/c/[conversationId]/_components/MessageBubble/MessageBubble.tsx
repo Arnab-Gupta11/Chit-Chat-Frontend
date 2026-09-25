@@ -77,7 +77,7 @@ export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
           className={`p-3 rounded-2xl relative group ${isOwn ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-muted rounded-bl-sm"} ${message.isDeleted ? "opacity-75 italic" : ""}`}
         >
           {/* 🪄 মেসেজ কন্টেন্ট: ডিলিট হলে Ban আইকন দেখাবে */}
-          <p className="text-sm flex items-center gap-1">
+          <div className="text-sm flex items-center gap-1">
             {message.isDeleted && <Ban className="w-4 h-4 opacity-75" />}
             {message.content}
             {message.reactions && message.reactions.length > 0 && (
@@ -97,7 +97,7 @@ export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
                 ))}
               </div>
             )}
-          </p>
+          </div>
 
           <div
             className={`flex items-center gap-1 mt-1 text-[10px] ${isOwn ? "text-primary-foreground/70 justify-end" : "text-muted-foreground"}`}
