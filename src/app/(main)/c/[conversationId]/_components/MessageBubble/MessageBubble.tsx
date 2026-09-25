@@ -30,6 +30,7 @@ interface MessageBubbleProps {
     status?: string;
     isEdited?: boolean;
     isDeleted?: boolean;
+    reactions?: any[];
   };
   isOwn: boolean;
 }
@@ -39,6 +40,7 @@ export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
   const params = useParams();
   const conversationId = params.conversationId as string;
 
+  //Delete Message
   const handleDelete = async () => {
     const socket = await getSocket("/");
     socket.emit(SocketEvent.DELETE_MESSAGE, {
@@ -46,6 +48,23 @@ export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
       conversationId: conversationId,
     });
   };
+
+  //Toggle Reaction
+  const handleToggleReaction = async (emoji: string) => {
+    const socket = await getSocket("/");
+
+    socket.emit(SocketEvent.TOGGLE_REACTION, {
+      messageId: message.id,
+      conversationId: conversationId,
+      emoji: emoji,
+    });
+  };
+
+  //Group reaction if one reaction added multiple time
+  const reactionGroups = message.reactions?.reduce((acc: any, curr: any) => {
+    acc[curr.emoji] = (acc[curr.emoji] || 0) + 1;
+    return acc;
+  }, {});
 
   return (
     <div
@@ -61,6 +80,23 @@ export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
           <p className="text-sm flex items-center gap-1">
             {message.isDeleted && <Ban className="w-4 h-4 opacity-75" />}
             {message.content}
+            {message.reactions && message.reactions.length > 0 && (
+              <div
+                className={`absolute -bottom-3 ${isOwn ? "right-2" : "left-2"} flex gap-1 bg-background border shadow-sm rounded-full px-1.5 py-0.5 text-[10px]`}
+              >
+                {Object.entries(reactionGroups || {}).map(([emoji, count]) => (
+                  <span
+                    key={emoji}
+                    className="flex items-center gap-0.5 text-foreground"
+                  >
+                    {emoji}{" "}
+                    <span className="font-semibold text-muted-foreground">
+                      {(count as number) > 1 ? (count as number) : ""}
+                    </span>
+                  </span>
+                ))}
+              </div>
+            )}
           </p>
 
           <div
@@ -86,9 +122,32 @@ export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
             <div
               className={`absolute top-0 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex bg-background text-foreground border shadow-sm rounded-md ${isOwn ? "left-0 -translate-x-full -ml-2" : "right-0 translate-x-full ml-2"}`}
             >
-              <Button variant="ghost" size="icon" className="h-6 w-6">
-                <Smile className="w-3 h-3" />
-              </Button>
+              {/* 🪄 Emoji Picker */}
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className={buttonVariants({
+                    variant: "ghost",
+                    size: "icon",
+                    className: "h-6 w-6",
+                  })}
+                >
+                  <Smile className="w-3 h-3" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="flex gap-1 min-w-0 p-1"
+                  style={{ width: "max-content", flexDirection: "row" }}
+                >
+                  {["👍", "❤️", "😂", "😮", "😢", "😡"].map((emoji) => (
+                    <DropdownMenuItem
+                      key={emoji}
+                      onClick={() => handleToggleReaction(emoji)}
+                      className="cursor-pointer px-2 py-1 text-base hover:bg-muted"
+                    >
+                      {emoji}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button variant="ghost" size="icon" className="h-6 w-6">
                 <Reply className="w-3 h-3" />
               </Button>
